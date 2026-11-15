@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Train New Sign</title>
+
+    <style>
+body{
+    font-family:Arial,sans-serif;
+    max-width:800px;
+    margin:auto;
+    padding:20px;
+    background-color: #111;
+}
+
+img{
+    width:100%;
+    border-radius:10px;
+}
+
+.card{
+    margin:20px 0;
+}
+
+input,select,button{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+}
+
+button{
+    background:pink;
+    border:none;
+    cursor:pointer;
+}
+h1,h2,h3,p,ul{
+    color:white;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Train New Sign</h1>
+
+    <img
+        src="/video_feed2"
+        alt="Camera Feed"
+        class="camera"
+    >
+
+    <div class="card">
+
+        <label>
+            Enter Sign Label
+        </label>
+
+        <input
+            type="text"
+            id="label"
+            placeholder="Example: HELLO"
+        >
+
+        <button onclick="startTraining()">
+            Start Training
+        </button>
+
+        <h3 id="result"
+            class="status">
+        </h3>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Existing Labels</h2>
+
+        <select id="deleteLabel">
+            <option>
+                Loading...
+            </option>
+        </select>
+
+        <button onclick="deleteSign()">
+            Delete Selected Sign
+        </button>
+
+        <ul id="labelList"></ul>
+
+    </div>
+
+    <form action="/" method="post">
+        <button type="submit">Go to Home</button>
+    </form>
+</div>
+
+<script>
+
+function startTraining(){
+
+    let label =
+    document.getElementById("label")
+    .value
+    .trim();
+
+    if(label === "")
+    {
+        alert("Enter a label first");
+        return;
+    }
+
+    let formData =
+    new FormData();
+
+    formData.append(
+        "label",
+        label
+    );
+
+    document.getElementById(
+        "result"
+    ).innerText =
+    "Training started...\nShow the sign to the camera.";
+
+    fetch("/train-model",
+    {
+        method:"POST",
+        body:formData
+    })
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        if(data.error)
+        {
+            document.getElementById(
+                "result"
+            ).innerText =
+            data.error;
+
+            return;
+        }
+
+        document.getElementById(
+            "result"
+        ).innerText =
+        "✅ Training Complete\nAccuracy: "
+        + data.accuracy;
+
+        loadLabels();
+    })
+
+    .catch(err => {
+
+        document.getElementById(
+            "result"
+        ).innerText =
+        "Training failed.";
+
+        console.error(err);
+    });
+
+}
+
+function loadLabels(){
+
+    fetch("/get-labels")
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        let dropdown =
+        document.getElementById(
+            "deleteLabel"
+        );
+
+        let list =
+        document.getElementById(
+            "labelList"
+        );
+
+        dropdown.innerHTML = "";
+        list.innerHTML = "";
+
+        if(data.length === 0)
+        {
+            dropdown.innerHTML =
+            "<option>No labels found</option>";
+
+            return;
+        }
+
+        data.forEach(label => {
+
+            let option =
+            document.createElement(
+                "option"
+            );
+
+            option.value = label;
+            option.text = label;
+
+            dropdown.appendChild(
+                option
+            );
+
+            let li =
+            document.createElement(
+                "li"
+            );
+
+            li.innerText = label;
+
+            list.appendChild(li);
+
+        });
+
+    });
+
+}
+
+function deleteSign(){
+
+    let label =
+    document.getElementById(
+        "deleteLabel"
+    ).value;
+
+    let formData =
+    new FormData();
+
+    formData.append(
+        "label",
+        label
+    );
+
+    fetch("/delete-label",
+    {
+        method:"POST",
+        body:formData
+    })
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        document.getElementById(
+            "result"
+        ).innerText =
+        data.message;
+
+        loadLabels();
+
+    })
+
+    .catch(err => {
+        console.error(err);
+    });
+
+}
+
+loadLabels();
+
+</script>
+
+</body>
+</html>

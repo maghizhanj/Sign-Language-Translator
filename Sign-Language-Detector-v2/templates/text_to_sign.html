@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text to Sign Language</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #111; margin-left:30%; margin-top: 15%;}
+        .sign-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .sign-container img { width: 80px; height: 80px; border: 1px solid #ccc; border-radius: 8px; }
+        .space-box { width: 40px; }
+        h2, h1, h3{
+            color: #fff;
+        }
+        input{
+            font-size: 15px;
+            padding: 10px;
+        }
+        button{
+            background-color: pink;
+            border: 0;
+            padding: 15px;
+
+        }
+        button:hover{
+            background-color: rgb(255, 176, 190);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Text to Sign Language Converter</h2>
+
+    <!-- Form submits back to the /tb route -->
+    <form action="/text-to-sign" method="POST" autocomplete="off">
+        <input type="text" name="user_text" placeholder="Type something..." value="{{ submitted_text }}" required>
+        <button type="submit">Convert to Sign</button>
+    </form>
+
+    <!-- Display the output if images were generated -->
+    {% if sign_images %}
+        <h3>Sign Language Output:</h3>
+        <div class="sign-container">
+            {% for item in sign_images %}
+                {% if item == 'space' %}
+                    <div class="space-box"></div>
+                {% else %}
+                    <img src="{{ url_for('static', filename=item) }}" alt="Sign character">
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+    <form action="/" method="post">Go to Home</form>
+
+</body>
+</html>
